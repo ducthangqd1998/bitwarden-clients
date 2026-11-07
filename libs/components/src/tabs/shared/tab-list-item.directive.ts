@@ -51,7 +51,7 @@ export class TabListItemDirective implements FocusableOption {
       return ["!tw-text-fg-inactive", "hover:!tw-text-fg-inactive"];
     }
     if (this.active()) {
-      return ["!tw-text-fg-brand"];
+      return ["!tw-text-fg-tab-active"];
     }
     return ["!tw-text-fg-body", "hover:!tw-text-fg-brand"];
   });
@@ -73,7 +73,7 @@ export class TabListItemDirective implements FocusableOption {
     "after:tw-content-['']",
     "after:tw-w-full",
     "after:tw-h-[2px]",
-    "after:tw-bg-bg-brand",
+    "after:tw-bg-bg-tab-indicator",
     "after:tw-absolute",
     "after:-tw-bottom-px",
     "after:tw-inset-x-0",

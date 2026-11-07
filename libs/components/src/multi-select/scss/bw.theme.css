@@ -50,7 +50,7 @@
 .ng-select .ng-select-container {
   color: var(--color-fg-heading);
   background-color: var(--color-bg-secondary);
-  border-radius: 11px;
+  border-radius: calc(var(--radius-control) - 1px);
   border: none;
   height: 100%;
   align-items: center;
@@ -60,7 +60,7 @@
 }
 .ng-select .ng-select-container .ng-value-container {
   align-items: center;
-  padding-block: 7px;
+  padding-block: var(--pad-select-value);
   padding-inline: 0.75rem 0;
 }
 .ng-select .ng-select-container .ng-value-container .ng-placeholder {

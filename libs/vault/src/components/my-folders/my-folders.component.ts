@@ -54,8 +54,8 @@ import { AddEditFolderDialogComponent } from "../add-edit-folder-dialog/add-edit
 import { openDeleteFolderDialog } from "../delete-folder-dialog/delete-folder-dialog.component";
 import {
   BULK_BAR_CLEARANCE,
-  VAULT_TABLE_MIN_HEIGHT,
-  VAULT_TABLE_ROW_HEIGHT,
+  vaultTableMinHeight,
+  vaultTableRowHeight,
 } from "../vault-table-sizing";
 
 import { EmptyFoldersComponent } from "./empty-folders.component";
@@ -158,8 +158,8 @@ export class MyFoldersComponent {
 
   protected readonly trackById: TrackByFunction<FolderTableRow> = (_, row) => row.id;
 
-  protected readonly rowHeight = VAULT_TABLE_ROW_HEIGHT;
-  protected readonly minTableHeight = VAULT_TABLE_MIN_HEIGHT;
+  protected readonly rowHeight = vaultTableRowHeight();
+  protected readonly minTableHeight = vaultTableMinHeight(this.rowHeight);
 
   protected readonly selected = computed(() => this.tableRef()?.selectionModel()?.selected() ?? []);
 

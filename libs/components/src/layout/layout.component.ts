@@ -35,6 +35,20 @@ import { LayoutFooterService } from "./layout-footer.service";
 import { MAIN_CONTENT_MIN_WIDTH_REM } from "./layout-metrics";
 import { ScrollLayoutHostDirective } from "./scroll-layout.directive";
 
+/**
+ * The flat style's shell: <main> is a white panel inset from a tinted frame, which the nav shares.
+ * `html.vfo1` limits it to the web client: desktop's nav is still dark and keeps its flush
+ * layout. Each class is a complete string so Tailwind can find it.
+ */
+const INSET_PANEL_CLASSES = [
+  "[html.vfo1_&]:tw-m-2",
+  "[html.vfo1_&]:tw-ms-0",
+  "[html.vfo1_&]:tw-rounded-panel",
+  "[html.vfo1_&]:tw-border",
+  "[html.vfo1_&]:tw-border-solid",
+  "[html.vfo1_&]:tw-border-border-light",
+];
+
 // FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
 // eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
@@ -352,6 +366,34 @@ export class LayoutComponent {
    * the backdrop out against the window edge instead of tucking into the nav.
    */
   protected readonly showRoundedCorner = computed(() => this.rounded() && this.navOccupiesColumn());
+
+  /**
+   * On a narrow viewport the siderail still renders, but its column collapses to 0px, so it floats
+   * over the start of <main> and hides what is there. <main> clears it instead.
+   */
+  protected readonly railOverlapsMain = computed(
+    () =>
+      this.hasSideNav() &&
+      !this.navOccupiesColumn() &&
+      !this.sideNavService.isOverlay() &&
+      this.sideNavService.version() === "vfo1",
+  );
+
+  /** The vfo1 nav has width, so <main> can sit inset beside it. Independent of `rounded`. */
+  protected readonly insetShell = computed(
+    () => this.sideNavService.version() === "vfo1" && this.navOccupiesColumn(),
+  );
+
+  /** Padding for <main>, plus the inset panel when the shell is inset. */
+  protected readonly mainClasses = computed(() => [
+    ...(this.vfo1Enabled() ? ["tw-p-10", "has-[bit-header]:tw-pt-0"] : ["tw-p-8"]),
+    ...(this.insetShell() ? INSET_PANEL_CLASSES : []),
+  ]);
+
+  /** The frame behind the inset panel: the nav's own color, so the two read as one surface. */
+  protected readonly frameClasses = computed(() =>
+    this.insetShell() ? ["[html.vfo1_&]:tw-bg-bg-nav"] : [],
+  );
 
   protected focusMainContent() {
     this.mainContent().nativeElement.focus();

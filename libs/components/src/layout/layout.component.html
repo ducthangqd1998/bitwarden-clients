@@ -9,6 +9,7 @@
   class="tw-grid tw-relative tw-size-full tw-overflow-hidden tw-grid-rows-[minmax(0,1fr)]"
   [style.grid-template-columns]="gridTemplateColumns()"
   [class.tw-bg-bg-nav]="rounded()"
+  [class]="frameClasses()"
   [attr.data-nav-version]="rounded() ? sideNavService.version() : null"
   cdkTrapFocus
 >
@@ -57,8 +58,9 @@
     bitScrollLayoutHost
     class="tw-col-start-2 tw-row-start-1 tw-overflow-auto tw-max-h-full tw-bg-background tw-pt-6 tw-@container has-[bit-page]:tw-p-0"
     [style.min-width.rem]="mainContentMinWidthRem"
+    [style.padding-inline-start.rem]="railOverlapsMain() ? siderailWidthRem + 1 : null"
     [class.tw-rounded-tl-2xl]="showRoundedCorner()"
-    [class]="vfo1Enabled() ? ['tw-p-10', 'has-[bit-header]:tw-pt-0'] : ['tw-p-8']"
+    [class]="mainClasses()"
   >
     <!-- ^ If updating this padding, also update the padding correction in bit-banner! ^ -->
     <ng-content></ng-content>

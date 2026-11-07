@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from "@angular/common";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,7 +11,16 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed, toObservable, toSignal } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
-import { combineLatest, filter, firstValueFrom, map, shareReplay, switchMap, take } from "rxjs";
+import {
+  combineLatest,
+  filter,
+  firstValueFrom,
+  lastValueFrom,
+  map,
+  shareReplay,
+  switchMap,
+  take,
+} from "rxjs";
 
 import { CollectionService } from "@bitwarden/admin-console/common";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -31,15 +41,23 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
-import { CipherViewLike } from "@bitwarden/common/vault/utils/cipher-view-like-utils";
+import {
+  CipherViewLike,
+  CipherViewLikeUtils,
+} from "@bitwarden/common/vault/utils/cipher-view-like-utils";
 import { filterOutNullish } from "@bitwarden/common/vault/utils/observable-utilities";
 import {
+  BitKbdComponent,
   ButtonModule,
   CalloutModule,
+  CommandPaletteDialogComponent,
+  CommandPaletteItem,
   DialogService,
   IconTileComponent,
+  isAtOrLargerThanBreakpointSignal,
   LinkModule,
   PopoverModule,
+  SplitPaneComponent,
 } from "@bitwarden/components";
 import { isGuid } from "@bitwarden/guid";
 import { importQueryParamsForVault } from "@bitwarden/importer-ui";
@@ -64,6 +82,7 @@ import {
   NewCipherMenuComponent,
   CardGridComponent,
   VaultBreadcrumbsComponent,
+  VaultItemDetailPaneComponent,
   VaultItemsTableComponent,
   VaultItemsTableRowAction,
   VaultNavService,
@@ -117,6 +136,29 @@ import { CollectionWebDialogAdapter } from "./shared-folders/collection-web-dial
 import { VaultBannersComponent } from "./vault-banners/vault-banners.component";
 import { VaultOnboardingComponent } from "./vault-onboarding/vault-onboarding.component";
 
+/**
+ * What the quick find offers besides the user's items. A choice comes back from the palette as
+ * `<kind>:<payload>`, see {@link VaultNextComponent.openQuickFind}.
+ */
+const QUICK_FIND_CREATE = [
+  { type: CipherType.Login, labelKey: "typeLogin", icon: "bwi-globe" },
+  { type: CipherType.Card, labelKey: "typeCard", icon: "bwi-credit-card" },
+  { type: CipherType.Identity, labelKey: "typeIdentity", icon: "bwi-id-card" },
+  { type: CipherType.SecureNote, labelKey: "typeSecureNote", icon: "bwi-sticky-note" },
+] as const;
+
+const QUICK_FIND_GO_TO = [
+  { route: "/tools/generator", labelKey: "generator", icon: "bwi-generate" },
+  { route: "/reports", labelKey: "reports", icon: "bwi-file-text" },
+  { route: "/settings/account", labelKey: "settings", icon: "bwi-cog" },
+] as const;
+
+/** Query parameter holding the item shown in the detail pane, so a reload or a link brings it back. */
+const SELECTED_ITEM_PARAM = "selected";
+
+/** Rows the quick find shows per group; typing narrows what is shown. */
+const QUICK_FIND_MAX_RESULTS = 8;
+
 function selectionScopeDetail(scope: VaultScope): string {
   if (scope.type === VaultScopeType.Organization) {
     return scope.organizationId;
@@ -140,8 +182,10 @@ function selectionScopeDetail(scope: VaultScope): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: "tw-flex tw-flex-col tw-h-full tw-min-h-0",
+    "(document:keydown)": "onDocumentKeydown($event)",
   },
   imports: [
+    BitKbdComponent,
     ButtonModule,
     CalloutModule,
     CoachmarkComponent,
@@ -158,6 +202,9 @@ function selectionScopeDetail(scope: VaultScope): string {
     MyFolderMenuComponent,
     CollectionOptionsMenuComponent,
     IconTileComponent,
+    NgTemplateOutlet,
+    SplitPaneComponent,
+    VaultItemDetailPaneComponent,
     VaultItemsTableComponent,
     VaultOnboardingComponent,
     VaultOrganizationUserNotificationsComponent,
@@ -571,16 +618,197 @@ export class VaultNextComponent implements OnInit {
   );
 
   /**
-   * Clicking an item's name opens the read-only view, matching the legacy vault — the dialog offers
-   * its own Edit toggle from there, while the `edit` row action goes straight to the form.
+   * Whether the viewport is wide enough for the detail pane beside the item list. Narrower, the page
+   * keeps opening items in the dialog.
+   */
+  protected readonly detailPaneEnabled = isAtOrLargerThanBreakpointSignal("lg");
+
+  /** The item list's width in the split layout, as a percentage of the page. */
+  protected readonly listPaneSize = signal(45);
+
+  protected readonly selectedItemId = signal<CipherId | undefined>(undefined);
+
+  /**
+   * The item shown in the detail pane. Read back from {@link ciphers} rather than stored, so it
+   * follows edits to the item and empties when the item leaves the current scope.
+   */
+  protected readonly selectedItem = computed(() => {
+    const id = this.selectedItemId();
+    return id == null
+      ? undefined
+      : this.ciphers().find((cipher) => CipherViewLikeUtils.getId(cipher) === id);
+  });
+
+  /**
+   * Clicking an item's name shows it in the detail pane when there is room for one. Otherwise it
+   * opens the read-only view, matching the legacy vault — the dialog offers its own Edit toggle from
+   * there, while the `edit` row action goes straight to the form. An item that failed to decrypt
+   * always takes the dialog path, which is what reports the failure.
    *
    * Bound as an input, so it must be a stable reference rather than a method: a new function on each
    * change detection pass would churn the table's name column.
    */
-  protected readonly itemAction = (item: CipherViewLike): Promise<void> =>
-    this.itemActions.view(item);
+  protected readonly itemAction = (item: CipherViewLike): void | Promise<void> => {
+    if (!this.detailPaneEnabled() || CipherViewLikeUtils.decryptionFailure(item)) {
+      return this.itemActions.view(item);
+    }
+    const id = CipherViewLikeUtils.getId(item);
+    this.selectedItemId.set(id);
+    void this.writeSelectionToUrl(id);
+  };
+
+  private readonly quickFindOpen = signal(false);
+
+  /**
+   * Everything the quick find can jump to: every active item by name first, since finding one is what it is mostly for, then the commands. Only
+   * names go in, the same ones the list shows, and items that failed to decrypt are left out.
+   */
+  protected readonly quickFindItems = computed<CommandPaletteItem[]>(() => {
+    const t = (key: string) => this.i18nService.t(key);
+
+    const create = this.showItemCreation()
+      ? QUICK_FIND_CREATE.map(({ type, labelKey, icon }) => ({
+          value: `create:${type}`,
+          label: t(labelKey),
+          group: t("addItem"),
+          icon,
+        }))
+      : [];
+
+    const goTo = QUICK_FIND_GO_TO.map(({ route, labelKey, icon }) => ({
+      value: `go:${route}`,
+      label: t(labelKey),
+      group: t("goTo"),
+      icon,
+    }));
+
+    const items = this.activeCiphers().flatMap((cipher) => {
+      const id = CipherViewLikeUtils.getId(cipher);
+      if (id == null || CipherViewLikeUtils.decryptionFailure(cipher)) {
+        return [];
+      }
+      const type = CipherViewLikeUtils.getType(cipher);
+      return [
+        {
+          value: `item:${id}`,
+          label: cipher.name,
+          description: CipherViewLikeUtils.subtitle(cipher, this.i18nService),
+          group: t("items"),
+          icon: QUICK_FIND_CREATE.find((entry) => entry.type === type)?.icon ?? "bwi-globe",
+        },
+      ];
+    });
+
+    return [...items, ...create, ...goTo];
+  });
+
+  /** Opens the quick find on Cmd/Ctrl+K. Other modifiers are left to the browser. */
+  protected onDocumentKeydown(event: KeyboardEvent): void {
+    if (
+      !(event.metaKey || event.ctrlKey) ||
+      event.altKey ||
+      event.shiftKey ||
+      event.key.toLowerCase() !== "k"
+    ) {
+      return;
+    }
+    event.preventDefault();
+    void this.openQuickFind();
+  }
+
+  /** Searches items and commands in a palette, then does what was chosen. */
+  protected async openQuickFind(): Promise<void> {
+    // Not on top of the item dialog, and not twice.
+    if (this.quickFindOpen() || this.itemActions.itemDialogOpen()) {
+      return;
+    }
+
+    this.quickFindOpen.set(true);
+    try {
+      const dialog = CommandPaletteDialogComponent.open(this.dialogService, {
+        label: this.i18nService.t("quickFind"),
+        placeholder: this.i18nService.t("quickFindPlaceholder"),
+        emptyText: this.i18nService.t("noResultsFound"),
+        items: this.quickFindItems(),
+        maxResultsPerGroup: QUICK_FIND_MAX_RESULTS,
+      });
+      const choice = await lastValueFrom(dialog.closed);
+      if (choice != null) {
+        await this.runQuickFindChoice(choice);
+      }
+    } finally {
+      this.quickFindOpen.set(false);
+    }
+  }
+
+  private async runQuickFindChoice(choice: string): Promise<void> {
+    const separator = choice.indexOf(":");
+    const kind = choice.slice(0, separator);
+    const payload = choice.slice(separator + 1);
+
+    if (kind === "create") {
+      const entry = QUICK_FIND_CREATE.find((e) => String(e.type) === payload);
+      if (entry != null) {
+        await this.addCipher(entry.type);
+      }
+    } else if (kind === "go") {
+      await this.router.navigate([payload]);
+    } else if (kind === "item") {
+      const item = this.activeCiphers().find((c) => CipherViewLikeUtils.getId(c) === payload);
+      if (item == null) {
+        return;
+      }
+      // The pane only shows items of the page's current scope; any other item opens in the dialog.
+      const inScope = this.ciphers().some((c) => CipherViewLikeUtils.getId(c) === payload);
+      await (inScope ? this.itemAction(item) : this.itemActions.view(item));
+    }
+  }
+
+  /** Edit stays in the dialog; the pane is read-only. */
+  protected readonly editSelectedItem = (item: CipherViewLike) => this.itemActions.edit(item);
 
   private readonly queryParams = toSignal(this.activatedRoute.queryParamMap);
+
+  /** The selection last read from the URL, so only a change of it, not other parameters, counts. */
+  private readonly selectionInUrl = signal<CipherId | undefined>(undefined);
+
+  /**
+   * Takes the selection from the URL when the URL changes it: the page opens on a link, the back
+   * button, or a navigation that drops the parameter. A table filter changing some other parameter
+   * must not touch the selection, which is why only a change of this one counts.
+   */
+  private readonly selectionFromUrl = effect(() => {
+    const param = this.queryParams()?.get(SELECTED_ITEM_PARAM);
+    const fromUrl = param != null && isGuid(param) ? (param as CipherId) : undefined;
+    if (fromUrl === untracked(this.selectionInUrl)) {
+      return;
+    }
+    untracked(() => {
+      this.selectionInUrl.set(fromUrl);
+      this.selectedItemId.set(fromUrl);
+    });
+  });
+
+  /** Forgets a selection that is not in the page: the item is gone, or is outside the scope. */
+  private readonly dropMissingSelection = effect(() => {
+    if (this.loading() || this.selectedItemId() == null || this.selectedItem() != null) {
+      return;
+    }
+    untracked(() => {
+      this.selectedItemId.set(undefined);
+      void this.writeSelectionToUrl(undefined);
+    });
+  });
+
+  /** Puts the selection on the URL without adding history entries or touching other parameters. */
+  private async writeSelectionToUrl(id: CipherId | undefined): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { [SELECTED_ITEM_PARAM]: id ?? null },
+      queryParamsHandling: "merge",
+      replaceUrl: true,
+    });
+  }
 
   /** The item the URL asks the page to open, if any — see {@link itemDeepLinkFrom}. */
   private readonly itemDeepLink = computed(() => itemDeepLinkFrom(this.queryParams()));

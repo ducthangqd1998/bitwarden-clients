@@ -152,7 +152,7 @@ export class FileDropzoneComponent implements ControlValueAccessor {
       "tw-py-10",
       "tw-border",
       "tw-border-dashed",
-      "tw-rounded-xl",
+      "tw-rounded-card",
       "tw-transition-colors",
       "tw-bg-bg-secondary",
       "focus-within:tw-border-transparent",

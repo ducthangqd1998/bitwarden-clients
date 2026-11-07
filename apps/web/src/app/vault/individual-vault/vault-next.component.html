@@ -50,71 +50,102 @@
   [scope]="vaultScope()"
 ></vault-card-grid>
 
-<!-- Remounted per scope: the table reads its filters from the URL once, at mount. -->
-<vault-items-table
-  *vaultRemountOn="filterScopeKey()"
-  [ciphers]="ciphers()"
-  [loading]="loading()"
-  [rowActions]="rowActions()"
-  [folders]="folders()"
-  [collections]="scopedCollections()"
-  [organizations]="scopedOrganizations()"
-  [scopedOrganizationId]="scopedOrganizationId()"
-  [defaultCollectionId]="defaultCollectionId()"
-  [orgRequiresDataOwnership]="orgRequiresDataOwnership()"
-  [myVaultItemCount]="myVaultItemCount()"
-  [itemAction]="itemAction"
-  [copyPresentation]="copyPresentation()"
-  [scope]="vaultScope()"
-  [organizationName]="emptyVaultOrganizationName()"
-  [hasMultipleVaults]="hasMultipleVaults()"
-  [sharedFolderName]="emptySharedFolderName()"
-  [folderName]="emptyFolderName()"
->
-  @if (showItemCreation()) {
-    <vault-new-cipher-menu
-      slot="empty-add-item"
-      [coachmarkEnabled]="false"
-      [canCreateCipher]="true"
-      [canCreateSshKey]="true"
-      [canCreateFolder]="false"
-      [canCreateCollection]="false"
-      (cipherAdded)="addCipher($event)"
-      (onAddItemDialog)="openAddItemDialog('empty')"
-      id="vault-next_empty-new-cipher-menu"
-    />
-  }
-
-  <div slot="toolbar" class="tw-flex tw-items-center tw-gap-3">
+<ng-template #itemsTable>
+  <!-- Remounted per scope: the table reads its filters from the URL once, at mount. -->
+  <vault-items-table
+    *vaultRemountOn="filterScopeKey()"
+    [ciphers]="ciphers()"
+    [loading]="loading()"
+    [rowActions]="rowActions()"
+    [folders]="folders()"
+    [collections]="scopedCollections()"
+    [organizations]="scopedOrganizations()"
+    [scopedOrganizationId]="scopedOrganizationId()"
+    [defaultCollectionId]="defaultCollectionId()"
+    [orgRequiresDataOwnership]="orgRequiresDataOwnership()"
+    [myVaultItemCount]="myVaultItemCount()"
+    [itemAction]="itemAction"
+    [selectedCipherId]="detailPaneEnabled() ? selectedItemId() : undefined"
+    [copyPresentation]="copyPresentation()"
+    [scope]="vaultScope()"
+    [organizationName]="emptyVaultOrganizationName()"
+    [hasMultipleVaults]="hasMultipleVaults()"
+    [sharedFolderName]="emptySharedFolderName()"
+    [folderName]="emptyFolderName()"
+  >
     @if (showItemCreation()) {
-      <button
-        id="vault-next_button_import"
-        type="button"
-        bitButton
-        startIcon="bwi-download"
-        buttonType="secondary"
-        [bitPopoverAnchorFor]="importCoachmark.popover()"
-        [popoverOpen]="importCoachmarkOpen()"
-        [position]="coachmarkService.getStepPosition('importData')"
-        [closeOnBackdropClick]="false"
-        [spotlight]="true"
-        (click)="openImport()"
-      >
-        {{ "importNoun" | i18n }}
-      </button>
-      <vault-coachmark #importCoachmark stepId="importData" />
       <vault-new-cipher-menu
+        slot="empty-add-item"
+        [coachmarkEnabled]="false"
         [canCreateCipher]="true"
         [canCreateSshKey]="true"
-        [canCreateFolder]="true"
-        [canCreateCollection]="canCreateCollections()"
+        [canCreateFolder]="false"
+        [canCreateCollection]="false"
         (cipherAdded)="addCipher($event)"
-        (onAddItemDialog)="openAddItemDialog('toolbar')"
-        (folderAdded)="addFolder()"
-        (collectionAdded)="addCollection()"
+        (onAddItemDialog)="openAddItemDialog('empty')"
+        id="vault-next_empty-new-cipher-menu"
       />
     }
-  </div>
-</vault-items-table>
+
+    <div slot="toolbar" class="tw-flex tw-flex-wrap tw-items-center tw-gap-3">
+      <button
+        id="vault-next_button_quick-find"
+        type="button"
+        bitButton
+        buttonType="secondary"
+        startIcon="bwi-search"
+        (click)="openQuickFind()"
+      >
+        {{ "quickFind" | i18n }}
+        <bit-kbd class="-tw-my-1" [keys]="['modifier', 'K']" />
+      </button>
+      @if (showItemCreation()) {
+        <button
+          id="vault-next_button_import"
+          type="button"
+          bitButton
+          startIcon="bwi-download"
+          buttonType="secondary"
+          [bitPopoverAnchorFor]="importCoachmark.popover()"
+          [popoverOpen]="importCoachmarkOpen()"
+          [position]="coachmarkService.getStepPosition('importData')"
+          [closeOnBackdropClick]="false"
+          [spotlight]="true"
+          (click)="openImport()"
+        >
+          {{ "importNoun" | i18n }}
+        </button>
+        <vault-coachmark #importCoachmark stepId="importData" />
+        <vault-new-cipher-menu
+          [canCreateCipher]="true"
+          [canCreateSshKey]="true"
+          [canCreateFolder]="true"
+          [canCreateCollection]="canCreateCollections()"
+          (cipherAdded)="addCipher($event)"
+          (onAddItemDialog)="openAddItemDialog('toolbar')"
+          (folderAdded)="addFolder()"
+          (collectionAdded)="addCollection()"
+        />
+      }
+    </div>
+  </vault-items-table>
+</ng-template>
+
+@if (detailPaneEnabled()) {
+  <bit-split-pane
+    class="tw-min-h-0 tw-flex-1"
+    [label]="'resizeItemList' | i18n"
+    [(startSize)]="listPaneSize"
+    [minStartSize]="30"
+    [minEndSize]="30"
+  >
+    <div slot="start" class="tw-flex tw-h-full tw-min-h-0 tw-flex-col">
+      <ng-container [ngTemplateOutlet]="itemsTable" />
+    </div>
+    <vault-item-detail-pane slot="end" [item]="selectedItem()" (edit)="editSelectedItem($event)" />
+  </bit-split-pane>
+} @else {
+  <ng-container [ngTemplateOutlet]="itemsTable" />
+}
 
 <bit-vault-batch-action />

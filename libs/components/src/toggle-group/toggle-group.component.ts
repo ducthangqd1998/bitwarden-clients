@@ -189,7 +189,7 @@ export class ToggleGroupComponent<TValue = unknown> {
       "tw-p-1",
       "tw-relative",
       "after:tw-content-['']",
-      "after:tw-rounded-xl",
+      "after:tw-rounded-control",
       "after:tw-pointer-events-none",
       "after:tw-absolute",
       "after:tw-top-1",
@@ -202,8 +202,8 @@ export class ToggleGroupComponent<TValue = unknown> {
       "after:tw-translate-x-[calc(var(--active-toggle,0)*(100%_+_theme(spacing.1)))]",
       "after:tw-transition-transform",
       "after:tw-duration-[225ms]",
-      "after:tw-rounded-xl",
-      "after:tw-bg-bg-brand-stronger",
+      "after:tw-rounded-control",
+      "after:tw-bg-bg-toggle-active",
       this.hasActiveToggle() ? "after:tw-opacity-100" : "after:tw-opacity-0",
       ...(isFullWidth
         ? ["tw-grid", "tw-w-full", "[&>*]:tw-flex-1"]

@@ -109,7 +109,8 @@ $ng-dropdown-shadow: rgb(var(--color-secondary-100)) !default;
   .ng-select-container {
     color: $ng-select-primary-text;
     background-color: $ng-select-bg;
-    border-radius: 11px;
+    // One border inside the field container, which takes its radius from the theme.
+    border-radius: calc(var(--radius-control) - 1px);
     border: none;
     height: $ng-select-height;
     align-items: center;
@@ -118,7 +119,7 @@ $ng-dropdown-shadow: rgb(var(--color-secondary-100)) !default;
     }
     .ng-value-container {
       align-items: center;
-      padding-block: 7px;
+      padding-block: var(--pad-select-value);
       padding-inline: $ng-select-value-padding-left 0;
 
       .ng-placeholder {

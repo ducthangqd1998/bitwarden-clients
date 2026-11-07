@@ -69,7 +69,7 @@ const sizeStyles: Record<BadgeSize, SizeStyle> = {
 const commonStyles = [
   "tw-inline-flex",
   "tw-items-center",
-  "tw-rounded-full",
+  "tw-rounded-tag",
   "tw-border",
   "tw-font-medium",
   "tw-cursor-default",

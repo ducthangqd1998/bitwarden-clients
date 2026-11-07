@@ -4,12 +4,13 @@ jest.mock("../../admin-console/organizations/shared/components/collection-dialog
   openCollectionDialog: jest.fn(),
 }));
 
+import { NgTemplateOutlet } from "@angular/common";
 import { NO_ERRORS_SCHEMA, signal, WritableSignal } from "@angular/core";
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { ActivatedRoute, convertToParamMap, Data, ParamMap, Router } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
-import { BehaviorSubject, Observable, of, Subject } from "rxjs";
+import { BehaviorSubject, NEVER, Observable, of, Subject } from "rxjs";
 
 import { CollectionService } from "@bitwarden/admin-console/common";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -30,7 +31,13 @@ import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
-import { DialogRef, DialogService, PopoverModule, ToastService } from "@bitwarden/components";
+import {
+  CommandPaletteDialogComponent,
+  DialogRef,
+  DialogService,
+  PopoverModule,
+  ToastService,
+} from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 import {
   AddEditFolderDialogComponent,
@@ -368,13 +375,15 @@ describe("VaultNextComponent", () => {
           // be declared here rather than on the TestBed module — a standalone component resolves
           // schemas from its own metadata. The i18n pipe stays, since a schema does not cover an
           // unresolved pipe, and neither does it cover a structural directive — without
-          // `VaultRemountOnDirective` the table's template would never be instantiated.
+          // `VaultRemountOnDirective` the table's template would never be instantiated. The same goes
+          // for `NgTemplateOutlet`, which places the table in the page.
           // `CoachmarkComponent` stays for the same reason the pipes do: the toolbar reads
           // `#importCoachmark.popover()`, which a schema-stubbed element cannot answer.
           imports: [
             I18nPipe,
             Vfo1I18nPipe,
             VaultRemountOnDirective,
+            NgTemplateOutlet,
             CoachmarkComponent,
             CollectionOptionsMenuComponent,
             PopoverModule,
@@ -1236,6 +1245,314 @@ describe("VaultNextComponent", () => {
 
       expect(itemActions.view).toHaveBeenCalledWith(item);
       expect(itemActions.edit).not.toHaveBeenCalled();
+    });
+
+    it("has no detail pane when the viewport is too narrow for one", () => {
+      expect(fixture.debugElement.query(By.css("vault-item-detail-pane"))).toBeNull();
+    });
+
+    describe("with room for the detail pane", () => {
+      let originalMatchMedia: typeof window.matchMedia | undefined;
+
+      beforeEach(() => {
+        originalMatchMedia = window.matchMedia;
+        window.matchMedia = jest.fn().mockReturnValue({
+          matches: true,
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        });
+
+        // The page reads the viewport when it is created, so it has to be created again.
+        fixture.destroy();
+        fixture = TestBed.createComponent(VaultNextComponent);
+        fixture.detectChanges();
+      });
+
+      afterEach(() => {
+        window.matchMedia = originalMatchMedia as typeof window.matchMedia;
+      });
+
+      const pane = () => fixture.debugElement.query(By.css("vault-item-detail-pane"));
+
+      it("renders the pane beside the list", () => {
+        expect(pane()).not.toBeNull();
+      });
+
+      it("shows the activated item in the pane instead of opening the dialog", async () => {
+        const item = buildCipher({ id: "selected" });
+        ciphers$.next([item, buildCipher({ id: "other" })]);
+        fixture.detectChanges();
+
+        await component().itemAction(item);
+
+        expect(component().selectedItem()).toBe(item);
+        expect(component().selectedItemId()).toBe("selected");
+        expect(itemActions.view).not.toHaveBeenCalled();
+      });
+
+      it("opens the dialog for an item that failed to decrypt, which is what reports it", async () => {
+        const failed = buildCipher({ id: "failed", decryptionFailure: true });
+
+        await component().itemAction(failed);
+
+        expect(itemActions.view).toHaveBeenCalledWith(failed);
+        expect(component().selectedItem()).toBeUndefined();
+      });
+
+      it("empties the pane when the selected item leaves the list", async () => {
+        const item = buildCipher({ id: "selected" });
+        ciphers$.next([item]);
+        fixture.detectChanges();
+        await component().itemAction(item);
+        expect(component().selectedItem()).toBe(item);
+
+        ciphers$.next([]);
+        fixture.detectChanges();
+
+        expect(component().selectedItem()).toBeUndefined();
+      });
+
+      it("follows the item when it is edited", async () => {
+        const item = buildCipher({ id: "selected", name: "Before" });
+        ciphers$.next([item]);
+        fixture.detectChanges();
+        await component().itemAction(item);
+
+        const edited = buildCipher({ id: "selected", name: "After" });
+        ciphers$.next([edited]);
+        fixture.detectChanges();
+
+        expect(component().selectedItem()).toBe(edited);
+      });
+
+      describe("the selection in the URL", () => {
+        const openOn = (params: Record<string, string>) => {
+          queryParamMap$.next(convertToParamMap(params));
+          ciphers$.next([buildCipher()]);
+          fixture.detectChanges();
+        };
+
+        it("selects the item the URL names when the page opens", () => {
+          openOn({ selected: cipherId });
+
+          expect(component().selectedItemId()).toBe(cipherId);
+          expect(component().selectedItem()).toBeDefined();
+        });
+
+        it("ignores a value that is not an item id", () => {
+          openOn({ selected: "not-an-id" });
+
+          expect(component().selectedItemId()).toBeUndefined();
+        });
+
+        it("writes the chosen item to the URL, replacing the history entry", async () => {
+          const item = buildCipher({ id: "selected" });
+          ciphers$.next([item]);
+          fixture.detectChanges();
+
+          await component().itemAction(item);
+
+          expect(router.navigate).toHaveBeenCalledWith(
+            [],
+            expect.objectContaining({
+              queryParams: { selected: "selected" },
+              queryParamsHandling: "merge",
+              replaceUrl: true,
+            }),
+          );
+        });
+
+        it("follows the URL when a navigation takes the parameter away", () => {
+          openOn({ selected: cipherId });
+          expect(component().selectedItemId()).toBe(cipherId);
+
+          queryParamMap$.next(convertToParamMap({}));
+          fixture.detectChanges();
+
+          expect(component().selectedItemId()).toBeUndefined();
+        });
+
+        it("keeps a selection the URL has not caught up with when another parameter changes", async () => {
+          const item = buildCipher();
+          ciphers$.next([item]);
+          fixture.detectChanges();
+          await component().itemAction(item);
+
+          // A table filter writes its own parameter before the selection reaches the URL.
+          queryParamMap$.next(convertToParamMap({ q: "search" }));
+          fixture.detectChanges();
+
+          expect(component().selectedItemId()).toBe(cipherId);
+        });
+
+        it("forgets a selection whose item is not on the page, and clears the URL", () => {
+          queryParamMap$.next(convertToParamMap({ selected: cipherId }));
+          ciphers$.next([buildCipher({ id: "other" })]);
+          fixture.detectChanges();
+
+          expect(component().selectedItemId()).toBeUndefined();
+          expect(router.navigate).toHaveBeenCalledWith(
+            [],
+            expect.objectContaining({ queryParams: { selected: null } }),
+          );
+        });
+      });
+
+      it("edits through the dialog, since the pane is read-only", async () => {
+        const item = buildCipher();
+
+        await component().editSelectedItem(item);
+
+        expect(itemActions.edit).toHaveBeenCalledWith(item);
+      });
+    });
+  });
+
+  describe("quick find", () => {
+    let openPalette: jest.SpyInstance;
+
+    /** What the palette closes with: a choice, or `undefined` when dismissed. */
+    const choose = (value?: string) => openPalette.mockReturnValue({ closed: of(value) } as never);
+
+    const press = (init: KeyboardEventInit) => {
+      const event = new KeyboardEvent("keydown", { key: "k", cancelable: true, ...init });
+      document.dispatchEvent(event);
+      return event;
+    };
+
+    const params = () => openPalette.mock.calls[0][1];
+
+    beforeEach(() => {
+      openPalette = jest.spyOn(CommandPaletteDialogComponent, "open");
+      choose(undefined);
+    });
+
+    afterEach(() => {
+      openPalette.mockRestore();
+      itemDialogOpen.set(false);
+    });
+
+    it("opens on Ctrl+K and keeps the browser from handling the key", () => {
+      const event = press({ ctrlKey: true });
+
+      expect(openPalette).toHaveBeenCalledTimes(1);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it("opens on Cmd+K", () => {
+      press({ metaKey: true });
+
+      expect(openPalette).toHaveBeenCalledTimes(1);
+    });
+
+    it("leaves other key combinations alone", () => {
+      const withShift = press({ ctrlKey: true, shiftKey: true });
+      const withAlt = press({ ctrlKey: true, altKey: true });
+      const plain = press({});
+
+      expect(openPalette).not.toHaveBeenCalled();
+      expect([withShift, withAlt, plain].every((e) => !e.defaultPrevented)).toBe(true);
+    });
+
+    it("does not open on top of the item dialog", () => {
+      itemDialogOpen.set(true);
+
+      press({ ctrlKey: true });
+
+      expect(openPalette).not.toHaveBeenCalled();
+    });
+
+    it("does not open a second palette while one is open", () => {
+      openPalette.mockReturnValue({ closed: NEVER } as never);
+
+      press({ ctrlKey: true });
+      press({ ctrlKey: true });
+
+      expect(openPalette).toHaveBeenCalledTimes(1);
+    });
+
+    it("offers the commands and the items by name, without items that failed to decrypt", () => {
+      ciphers$.next([
+        buildCipher({ id: "alpha", name: "Alpha" }),
+        buildCipher({ id: "broken", name: "Broken", decryptionFailure: true }),
+      ]);
+      fixture.detectChanges();
+
+      press({ ctrlKey: true });
+
+      const values = params().items.map((item: { value: string }) => item.value);
+      expect(values).toEqual(
+        expect.arrayContaining([
+          `create:${CipherType.Login}`,
+          "go:/tools/generator",
+          "go:/reports",
+          "item:alpha",
+        ]),
+      );
+      expect(values).not.toContain("item:broken");
+      expect(params().items.find((i: { value: string }) => i.value === "item:alpha").label).toBe(
+        "Alpha",
+      );
+    });
+
+    it("lists the items before the commands, so they are not below the fold", () => {
+      ciphers$.next([buildCipher({ id: "alpha", name: "Alpha" })]);
+      fixture.detectChanges();
+
+      press({ ctrlKey: true });
+
+      const values: string[] = params().items.map((item: { value: string }) => item.value);
+      expect(values.indexOf("item:alpha")).toBeLessThan(values.indexOf("go:/reports"));
+      expect(values.indexOf("item:alpha")).toBeLessThan(
+        values.findIndex((v) => v.startsWith("create:")),
+      );
+    });
+
+    it("caps how many rows each group shows", () => {
+      press({ ctrlKey: true });
+
+      expect(params().maxResultsPerGroup).toBe(8);
+    });
+
+    it("adds an item of the chosen type", async () => {
+      choose(`create:${CipherType.Card}`);
+
+      press({ ctrlKey: true });
+      await fixture.whenStable();
+
+      expect(itemActions.add).toHaveBeenCalledWith(CipherType.Card, expect.any(Object));
+    });
+
+    it("goes to the chosen destination", async () => {
+      choose("go:/reports");
+
+      press({ ctrlKey: true });
+      await fixture.whenStable();
+
+      expect(router.navigate).toHaveBeenCalledWith(["/reports"]);
+    });
+
+    it("opens the chosen item", async () => {
+      const item = buildCipher({ id: "alpha", name: "Alpha" });
+      ciphers$.next([item]);
+      fixture.detectChanges();
+      choose("item:alpha");
+
+      press({ ctrlKey: true });
+      await fixture.whenStable();
+
+      expect(itemActions.view).toHaveBeenCalledWith(item);
+    });
+
+    it("does nothing when the palette is dismissed", async () => {
+      choose(undefined);
+
+      press({ ctrlKey: true });
+      await fixture.whenStable();
+
+      expect(itemActions.add).not.toHaveBeenCalled();
+      expect(itemActions.view).not.toHaveBeenCalled();
+      expect(router.navigate).not.toHaveBeenCalledWith(["/reports"]);
     });
   });
 

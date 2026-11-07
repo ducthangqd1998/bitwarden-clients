@@ -75,8 +75,8 @@ import { isRowActivationClick } from "../../utils/row-activation";
 import { CollectionOptionsMenuComponent } from "../collection-options-menu";
 import {
   BULK_BAR_CLEARANCE,
-  VAULT_TABLE_MIN_HEIGHT,
-  VAULT_TABLE_ROW_HEIGHT,
+  vaultTableMinHeight,
+  vaultTableRowHeight,
 } from "../vault-table-sizing";
 
 import { injectVaultOrganizationId } from "./inject-vault-organization";
@@ -284,8 +284,8 @@ export class SharedFoldersComponent {
 
   protected readonly trackById: TrackByFunction<SharedFolderRow> = (_index, row) => row.id;
 
-  protected readonly rowHeight = VAULT_TABLE_ROW_HEIGHT;
-  protected readonly minTableHeight = VAULT_TABLE_MIN_HEIGHT;
+  protected readonly rowHeight = vaultTableRowHeight();
+  protected readonly minTableHeight = vaultTableMinHeight(this.rowHeight);
 
   /**
    * The selected rows, read off the table's own model so a bulk action can be handed the rows it

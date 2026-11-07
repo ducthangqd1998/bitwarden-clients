@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, forwardRef, inject } from "@angular/core";
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  forwardRef,
+  inject,
+  input,
+} from "@angular/core";
 
 import { HoverRevealContainerDirective } from "../../hover-reveal";
 
@@ -43,6 +51,12 @@ export class BitRowComponent {
     { optional: true },
   );
 
+  /**
+   * Marks the row as the one the host is showing elsewhere (for example in a detail pane). Set by
+   * `<bit-table-v2>` from its `activeRow` input. Distinct from a row that is checked.
+   */
+  readonly active = input(false, { transform: booleanAttribute });
+
   protected readonly gridTemplateColumns = computed(() => this.table?.gridTemplateColumns());
 
   private readonly isList = computed(() => this.table?.presentation() === "list");
@@ -75,10 +89,13 @@ export class BitRowComponent {
             "tw-border-b",
             "tw-border-solid",
             "tw-border-border-base",
-            "hover:tw-bg-bg-brand-softer",
+            // Hover is repeated: it comes later in the stylesheet and would otherwise win.
+            ...(this.active()
+              ? ["tw-bg-bg-brand-softer", "hover:tw-bg-bg-brand-softer"]
+              : ["hover:tw-bg-bg-row-hover"]),
             // Focus carries the hover fill plus a ring. Inset so it isn't clipped by
             // the body's scroll container or by a fixed-height row's `overflow-clip`.
-            "has-[:focus-visible]:tw-bg-bg-brand-softer",
+            "has-[:focus-visible]:tw-bg-bg-row-hover",
             "has-[:focus-visible]:tw-ring-2",
             "has-[:focus-visible]:tw-ring-inset",
             "has-[:focus-visible]:tw-ring-border-focus",

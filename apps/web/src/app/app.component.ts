@@ -14,6 +14,7 @@ import { TokenService } from "@bitwarden/common/auth/abstractions/token.service"
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { EventUploadService } from "@bitwarden/common/dirt/event-logs";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/process-reload";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
@@ -73,6 +74,13 @@ export class AppComponent implements OnDestroy, OnInit {
     private readonly routerFocusManager: RouterFocusManagerService,
   ) {
     this.deviceTrustToastService.setupListeners$.pipe(takeUntilDestroyed()).subscribe();
+
+    // Marks <html> so the flat style in tw-theme.css reaches overlays too.
+    // remove when VFO1 flag is removed
+    this.configService
+      .getFeatureFlag$(FeatureFlag.VFO1Foundation)
+      .pipe(takeUntilDestroyed())
+      .subscribe((enabled) => document.documentElement.classList.toggle("vfo1", enabled));
 
     const langSubscription = this.documentLangSetter.start();
 

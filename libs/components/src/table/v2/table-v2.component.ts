@@ -310,6 +310,16 @@ export class BitTableV2Component<T = unknown, S extends string = never, F = Reco
   /** Optional trackBy for the virtualized row list. */
   readonly trackBy = input<TrackByFunction<T>>();
 
+  /**
+   * Tells which row the host is showing elsewhere, such as in a detail pane. That row is tinted.
+   * Pass a stable function: a new one on every change detection pass would restyle every row.
+   */
+  readonly activeRow = input<(row: T) => boolean>();
+
+  protected isActive(row: T): boolean {
+    return this.activeRow()?.(row) ?? false;
+  }
+
   /** Number of skeleton rows to show while {@link loading} is true. */
   readonly loadingRows = input(3);
 
@@ -866,7 +876,7 @@ export class BitTableV2Component<T = unknown, S extends string = never, F = Reco
           "tw-border",
           "tw-border-solid",
           "tw-border-border-base",
-          "tw-rounded-xl",
+          "tw-rounded-panel",
           "tw-overflow-clip",
           "tw-shadow-[0px_1px_0.5px_0.05px_rgba(29,41,61,0.02)]",
         ]),

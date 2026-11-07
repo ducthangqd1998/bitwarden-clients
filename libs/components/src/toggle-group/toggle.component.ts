@@ -85,7 +85,7 @@ export class ToggleComponent<TValue> {
     "tw-transition",
     "tw-text-center",
     "tw-text-sm",
-    "tw-rounded-xl",
+    "tw-rounded-control",
     "tw-z-[2]",
     "tw-transition",
     "tw-duration-[350ms]",
@@ -115,7 +115,7 @@ export class ToggleComponent<TValue> {
     "peer-focus-visible/toggle-input:tw-z-10",
     "peer-focus-visible/toggle-input:tw-bg-bg-hover",
 
-    "peer-checked/toggle-input:!tw-text-fg-contrast",
+    "peer-checked/toggle-input:!tw-text-fg-toggle-active",
     "peer-checked/toggle-input:after:tw-opacity-[0]",
   ];
 }

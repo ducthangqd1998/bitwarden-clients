@@ -160,6 +160,10 @@ module.exports = {
         "decorative-gray-bold": "var(--color-bg-decorative-gray-bold)",
         hover: "var(--color-bg-hover)",
         "hover-contrast": "var(--color-bg-hover-contrast)",
+        // Hover fill of a selectable row, item or menu entry. Brand-tinted unless a scope says otherwise.
+        "row-hover": "var(--color-bg-row-hover)",
+        "tab-indicator": "var(--color-tab-indicator)",
+        "toggle-active": "var(--color-bg-toggle-active)",
         overlay: "var(--color-bg-overlay)",
         nav: "var(--color-nav-bg-brand)",
         "nav-hover": "var(--color-nav-bg-brand-hover)",
@@ -337,6 +341,9 @@ module.exports = {
       "fg-accent-tertiary-strong": "var(--color-fg-accent-tertiary-strong)",
       "fg-nav": "var(--color-nav-fg-body)",
       "fg-nav-heading": "var(--color-nav-fg-heading)",
+      "fg-table-header": "var(--color-fg-table-header)",
+      "fg-tab-active": "var(--color-fg-tab-active)",
+      "fg-toggle-active": "var(--color-fg-toggle-active)",
       "fg-decorative-brand": "var(--color-fg-decorative-brand)",
       "fg-decorative-brand-bold": "var(--color-fg-decorative-brand-bold)",
       "fg-decorative-teal": "var(--color-fg-decorative-teal)",
@@ -404,6 +411,27 @@ module.exports = {
       ...theme("colors"),
     }),
     extend: {
+      // Values come from CSS variables (see tw-theme.css) so one scope can restyle them all.
+      borderRadius: {
+        control: "var(--radius-control)",
+        tag: "var(--radius-tag)",
+        card: "var(--radius-card)",
+        panel: "var(--radius-panel)",
+      },
+      boxShadow: {
+        // Menus, dialogs and the command palette. Remapped by a scope; see "SHAPE" in tw-theme.css.
+        overlay: "var(--shadow-overlay)",
+      },
+      // Control sizes and padding (see "SHAPE" in tw-theme.css). Use as `tw-size-control`,
+      // `tw-min-h-control`, `tw-pt-control-pad`, and so on.
+      spacing: {
+        "control-sm": "var(--size-control-sm)",
+        control: "var(--size-control)",
+        "control-lg": "var(--size-control-lg)",
+        "control-pad-sm": "var(--pad-control-sm)",
+        "control-pad": "var(--pad-control)",
+        "control-pad-lg": "var(--pad-control-lg)",
+      },
       width: {
         "50vw": "50vw",
         "75vw": "75vw",
@@ -416,14 +444,15 @@ module.exports = {
         "90vw": "90vw",
       }),
       fontSize: {
-        "3xl": ["1.875rem", "150%"],
+        "icon-control": "var(--text-icon-control)",
+        "3xl": ["var(--text-3xl)", "150%"],
         "2xl": ["1.5rem", "150%"],
         xl: ["1.25rem", "150%"],
         lg: ["1.125rem", "150%"],
         md: ["1rem", "150%"],
         base: ["1rem", "150%"],
-        sm: ["0.875rem", "150%"],
-        xs: [".75rem", "150%"],
+        sm: ["var(--text-sm)", "150%"],
+        xs: ["var(--text-xs)", "150%"],
         xxs: [".5rem", "150%"],
       },
       container: {

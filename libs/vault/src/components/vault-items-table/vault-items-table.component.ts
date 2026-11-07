@@ -109,8 +109,8 @@ import { EmptyVaultComponent } from "../empty-vault/empty-vault.component";
 import { VaultItem } from "../vault-item";
 import {
   BULK_BAR_CLEARANCE,
-  VAULT_TABLE_MIN_HEIGHT,
-  VAULT_TABLE_ROW_HEIGHT,
+  vaultTableMinHeight,
+  vaultTableRowHeight,
 } from "../vault-table-sizing";
 
 import { VaultItemsTableActionsColumnComponent } from "./vault-items-table-actions-column.component";
@@ -333,8 +333,8 @@ export class VaultItemsTableComponent<C extends CipherViewLike> {
 
   protected readonly filterNamespace = VAULT_FILTER_NAMESPACE;
   protected readonly filterKeys = VAULT_FILTER_KEYS;
-  protected readonly rowHeight = VAULT_TABLE_ROW_HEIGHT;
-  protected readonly minTableHeight = VAULT_TABLE_MIN_HEIGHT;
+  protected readonly rowHeight = vaultTableRowHeight();
+  protected readonly minTableHeight = vaultTableMinHeight(this.rowHeight);
 
   /** Bottom margin held while the bulk-actions bar is up. */
   protected readonly bulkBarClearance = computed(() =>
@@ -388,6 +388,20 @@ export class VaultItemsTableComponent<C extends CipherViewLike> {
    * Runs when a row's name is activated. Omit to render the name as plain text rather than a button.
    */
   readonly itemAction = input<(item: C) => void | Promise<void>>();
+
+  /**
+   * The ID of the item the host is showing elsewhere (for example in a detail pane), marked in the
+   * list as the current item. Unset when the host shows none.
+   */
+  readonly selectedCipherId = input<string | undefined>();
+
+  protected isCurrentItem(row: C): boolean {
+    const id = this.selectedCipherId();
+    return id != null && String(row.id) === id;
+  }
+
+  /** Bound to the table, so it has to keep the same identity. */
+  protected readonly isCurrentRow = (row: C): boolean => this.isCurrentItem(row);
 
   /**
    * Whether the `OrganizationDataOwnership` organization policy applies to the current user.

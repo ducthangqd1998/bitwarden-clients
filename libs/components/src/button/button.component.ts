@@ -68,7 +68,7 @@ export class ButtonComponent implements ButtonLikeAbstraction {
     const classes: string[] = [];
 
     // Add border-radius style
-    classes.push("tw-rounded-xl");
+    classes.push("tw-rounded-control");
 
     // Add block/inline styles
     if (this.baseButton.block()) {
@@ -90,26 +90,11 @@ export class ButtonComponent implements ButtonLikeAbstraction {
 
 const getButtonSizeStyles = (size: ButtonSize): string[] => {
   const buttonSizeStyles: Record<ButtonSize, string[]> = {
-    // 1px to account for 1px border. This ensures the overall size of the button remains consistent with icon buttons
-    small: [
-      "tw-pt-[calc(theme(spacing.2)_-_1px)]",
-      "tw-pb-[calc(theme(spacing.2)_-_1px)]",
-      "tw-px-3",
-      "tw-text-xs/4",
-    ],
-    // 625rem = spacing2.5. I could not use the value directly in the calc
-    default: [
-      "tw-pt-[calc(0.625rem_-_1px)]",
-      "tw-pb-[calc(0.625rem_-_1px)]",
-      "tw-px-4",
-      "tw-text-sm/5",
-    ],
-    large: [
-      "tw-pt-[calc(theme(spacing.3)_-_1px)]",
-      "tw-pb-[calc(theme(spacing.3)_-_1px)]",
-      "tw-px-4",
-      "tw-text-base/6",
-    ],
+    // The padding tokens already take off 1px for the border. This keeps the overall size of the
+    // button consistent with icon buttons.
+    small: ["tw-pt-control-pad-sm", "tw-pb-control-pad-sm", "tw-px-3", "tw-text-xs/4"],
+    default: ["tw-pt-control-pad", "tw-pb-control-pad", "tw-px-4", "tw-text-sm/5"],
+    large: ["tw-pt-control-pad-lg", "tw-pb-control-pad-lg", "tw-px-4", "tw-text-base/6"],
   };
 
   return buttonSizeStyles[size] || buttonSizeStyles.default;

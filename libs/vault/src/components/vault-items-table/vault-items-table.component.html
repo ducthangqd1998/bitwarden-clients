@@ -8,6 +8,7 @@
   [loading]="loading()"
   [selection]="selection"
   [trackBy]="trackByCipherId"
+  [activeRow]="isCurrentRow"
   [virtualRowHeight]="rowHeight"
   [queryParam]="filterNamespace"
   height="fill"
@@ -152,6 +153,7 @@
             type="button"
             vaultTableRowName
             [title]="'editItemWithName' | i18n: row.name"
+            [attr.aria-current]="isCurrentItem(row) ? 'true' : null"
             (click)="itemAction()!(row)"
           >
             {{ row.name }}

@@ -26,15 +26,18 @@ export const LinkTypes = [
 export type LinkType = (typeof LinkTypes)[number];
 
 const linkStyles: Record<LinkType, string[]> = {
+  // The flat style has no brand color to tell a link from text, so these stay underlined.
   primary: [
     "tw-text-fg-brand",
     "hover:tw-text-fg-brand-strong",
     "focus-visible:tw-text-fg-brand-strong",
+    "[html.vfo1_&_span]:tw-underline",
   ],
   default: [
     "tw-text-fg-brand",
     "hover:tw-text-fg-brand-strong",
     "focus-visible:tw-text-fg-brand-strong",
+    "[html.vfo1_&_span]:tw-underline",
   ],
   secondary: ["tw-text-fg-heading", "hover:tw-text-fg-heading", "focus-visible:tw-text-fg-heading"],
   light: [

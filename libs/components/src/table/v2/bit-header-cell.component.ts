@@ -112,7 +112,7 @@ export class BitHeaderCellComponent {
     "tw-transition",
     "hover:tw-no-underline",
     "tw-bg-transparent",
-    "tw-text-fg-body",
+    "tw-text-fg-table-header",
     "hover:tw-bg-hover-default",
     "disabled:tw-text-fg-inactive",
     "disabled:hover:tw-bg-transparent",

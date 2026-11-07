@@ -29,3 +29,22 @@ const TABLE_CHROME_HEIGHT = 188;
  * a row or two on a short viewport. Below this the page scrolls instead.
  */
 export const VAULT_TABLE_MIN_HEIGHT = MIN_ROWS * VAULT_TABLE_ROW_HEIGHT + TABLE_CHROME_HEIGHT;
+
+/**
+ * The row height (px) in effect: the `--row-height-px` token from the theme, so the flat style can
+ * make rows shorter, falling back to {@link VAULT_TABLE_ROW_HEIGHT} when the token is not set.
+ *
+ * The table needs a number for virtual scrolling, so this reads the token once, when a table is
+ * created. A table already on screen keeps its height if the style changes underneath it.
+ */
+export function vaultTableRowHeight(): number {
+  const read =
+    typeof document === "undefined" ? undefined : getComputedStyle(document.documentElement);
+  const px = Number.parseFloat(read?.getPropertyValue?.("--row-height-px") ?? "");
+  return Number.isFinite(px) && px > 0 ? px : VAULT_TABLE_ROW_HEIGHT;
+}
+
+/** {@link VAULT_TABLE_MIN_HEIGHT} for a given row height. */
+export function vaultTableMinHeight(rowHeight: number): number {
+  return MIN_ROWS * rowHeight + TABLE_CHROME_HEIGHT;
+}

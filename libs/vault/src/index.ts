@@ -59,6 +59,7 @@ export * from "./components/carousel";
 export * from "./components/new-cipher-menu/new-cipher-menu.component";
 export * from "./components/permit-cipher-details-popover/permit-cipher-details-popover.component";
 export { CardGridComponent } from "./components/card-grid/card-grid.component";
+export { VaultItemDetailPaneComponent } from "./components/vault-item-detail-pane/vault-item-detail-pane.component";
 export * from "./components/show-quick-copy-actions-details-popover/show-quick-copy-actions-details-popover.component";
 export * from "./components/vault-items-transfer";
 export { VaultItem, compareVaultItems } from "./components/vault-item";

@@ -46,9 +46,9 @@ export const menuItemBaseStyles = [
 export const menuItemPrimaryStyles = [
   "tw-text-fg-body",
   "hover:tw-text-fg-heading",
-  "hover:tw-bg-bg-brand-softer",
+  "hover:tw-bg-bg-row-hover",
   "focus-visible:tw-text-fg-heading",
-  "focus-visible:tw-bg-bg-brand-softer",
+  "focus-visible:tw-bg-bg-row-hover",
 ];
 
 @Component({

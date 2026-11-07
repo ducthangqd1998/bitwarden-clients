@@ -1,5 +1,6 @@
 import {
   AfterContentChecked,
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -44,6 +45,13 @@ export const ITEM_END_SLOT_TRAILING_OVERRIDES =
 export class ItemComponent implements AfterContentChecked {
   readonly size = input<ItemSize>("base");
 
+  /**
+   * Marks the item as the current selection, for lists where choosing an item shows it elsewhere
+   * (for example in a detail pane). Visual only: put `aria-current` or `aria-selected` on the
+   * interactive element, as the pattern in use requires.
+   */
+  readonly selected = input(false, { transform: booleanAttribute });
+
   /** Standalone items may already be wrapped in a consumer's own list, so only claim `listitem` inside a group. */
   protected readonly role = inject(ItemGroupComponent, { optional: true }) ? "listitem" : null;
 
@@ -64,7 +72,13 @@ export class ItemComponent implements AfterContentChecked {
 
   protected readonly hostClasses = computed(() => {
     const base =
-      "tw-flex tw-rounded-lg tw-gap-3 tw-justify-between tw-overflow-hidden tw-bg-bg-primary [&:has([data-item-main-content]_button:hover,[data-item-main-content]_a:hover)]:tw-cursor-pointer [&:has([data-item-main-content]_button:enabled:hover,[data-item-main-content]_a:hover,[data-item-main-content]_button:enabled:focus-visible,[data-item-main-content]_a:focus-visible)]:tw-bg-bg-brand-softer tw-text-fg-heading tw-border-solid tw-border-border-base tw-min-h-9";
+      "tw-flex tw-rounded-lg tw-gap-3 tw-justify-between tw-overflow-hidden [&:has([data-item-main-content]_button:hover,[data-item-main-content]_a:hover)]:tw-cursor-pointer [&:has([data-item-main-content]_button:enabled:hover,[data-item-main-content]_a:hover,[data-item-main-content]_button:enabled:focus-visible,[data-item-main-content]_a:focus-visible)]:tw-bg-bg-row-hover tw-text-fg-heading tw-border-solid tw-min-h-9";
+
+    // Surface and border colour are chosen here, not layered on `base`: two competing utilities
+    // are resolved by stylesheet order, not by their order in the class list.
+    const surface = this.selected()
+      ? "tw-bg-bg-brand-softer tw-border-border-brand"
+      : "tw-bg-bg-primary tw-border-border-base";
 
     const structural =
       "tw-border bit-compact:tw-rounded-none bit-compact:last-of-type:tw-rounded-b-lg bit-compact:first-of-type:tw-rounded-t-lg tw-mb-1.5 bit-compact:tw-mb-0 bit-compact:[&+&]:tw-border-t-0";
@@ -73,7 +87,7 @@ export class ItemComponent implements AfterContentChecked {
       ? "tw-z-10 tw-outline-none tw-ring-1 tw-border-border-focus tw-ring-border-focus bit-compact:tw-ring-inset bit-compact:tw-ring-2"
       : "";
 
-    return `${base} ${structural} ${focus}`.trim();
+    return `${base} ${surface} ${structural} ${focus}`.trim();
   });
 
   ngAfterContentChecked(): void {

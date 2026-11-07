@@ -117,6 +117,37 @@ export const Default: Story = {
   }),
 };
 
+export const Selected: Story = {
+  render: (args) => ({
+    props: args,
+    template: /*html*/ `
+      <bit-item-group>
+        <bit-item>
+          <button type="button" bit-item-content>
+            <i slot="start" class="bwi bwi-globe tw-text-2xl tw-text-muted" aria-hidden="true"></i>
+            Not selected
+            <span slot="secondary">Bar</span>
+          </button>
+        </bit-item>
+        <bit-item selected>
+          <button type="button" bit-item-content aria-current="true">
+            <i slot="start" class="bwi bwi-globe tw-text-2xl tw-text-muted" aria-hidden="true"></i>
+            Selected
+            <span slot="secondary">Bar</span>
+          </button>
+        </bit-item>
+        <bit-item>
+          <button type="button" bit-item-content>
+            <i slot="start" class="bwi bwi-globe tw-text-2xl tw-text-muted" aria-hidden="true"></i>
+            Not selected
+            <span slot="secondary">Bar</span>
+          </button>
+        </bit-item>
+      </bit-item-group>
+    `,
+  }),
+};
+
 export const Sizes: Story = {
   render: (args) => ({
     props: args,

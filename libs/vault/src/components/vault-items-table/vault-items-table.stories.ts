@@ -29,6 +29,7 @@ import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { SearchService as DefaultSearchService } from "@bitwarden/common/vault/services/search.service";
 import {
+  BitKbdComponent,
   ButtonModule,
   I18nMockService,
   LayoutFooterService,
@@ -457,6 +458,8 @@ type StoryProps = {
   initialFilterValues?: Partial<VaultItemsTableFilters>;
   heading?: string;
   itemAction: (item: CipherView) => void;
+  /** The item a host shows elsewhere, marked in the list. */
+  selectedCipherId?: string;
   /** Relayed to the empty state untouched — see {@link Empty} and its siblings. */
   scope?: VaultScope;
   organizationName?: string;
@@ -490,6 +493,7 @@ const template = `
       [copyPresentation]="copyPresentation"
       [initialFilterValues]="initialFilterValues"
       [itemAction]="itemAction"
+      [selectedCipherId]="selectedCipherId"
       [scope]="scope"
       [organizationName]="organizationName"
       [hasMultipleVaults]="hasMultipleVaults"
@@ -498,6 +502,10 @@ const template = `
     >
       <button slot="empty-add-item" bitButton buttonType="primary" type="button" startIcon="bwi-plus">
         Add item
+      </button>
+      <button slot="toolbar" bitButton buttonType="secondary" type="button" startIcon="bwi-search">
+        Quick find
+        <bit-kbd class="-tw-my-1" [keys]="['modifier', 'K']" />
       </button>
       <button slot="toolbar" bitButton buttonType="secondary" type="button" startIcon="bwi-import">
         Import
@@ -697,6 +705,7 @@ export default {
     }),
     moduleMetadata({
       imports: [
+        BitKbdComponent,
         ButtonModule,
         TypographyModule,
         VaultBatchActionComponent,
@@ -793,6 +802,14 @@ type Story = StoryObj<StoryProps>;
  * names them on hover.
  */
 export const Default: Story = {};
+
+/**
+ * `selectedCipherId` marks the item a host is showing in a detail pane: its name cell is tinted and
+ * its name button carries `aria-current`.
+ */
+export const WithSelectedItem: Story = {
+  args: { selectedCipherId: "2" },
+};
 
 /** Bind `loading` while the vault decrypts and skeleton rows stand in for the data. */
 export const Loading: Story = {

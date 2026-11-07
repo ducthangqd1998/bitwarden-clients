@@ -11397,6 +11397,9 @@
   "unknownCipher": {
     "message": "Unknown item, you may need to request permission to access this item."
   },
+  "vaultDetailPaneEmpty": {
+    "message": "Select an item to see its details"
+  },
   "unknownSecret": {
     "message": "Unknown secret, you may need to request permission to access this secret."
   },
@@ -17128,6 +17131,21 @@
   },
   "resizeSideNavigation": {
     "message": "Resize side navigation"
+  },
+  "resizeItemList": {
+    "message": "Resize item list"
+  },
+  "quickFind": {
+    "message": "Quick find"
+  },
+  "quickFindPlaceholder": {
+    "message": "Search items and commands"
+  },
+  "noResultsFound": {
+    "message": "No results"
+  },
+  "goTo": {
+    "message": "Go to"
   },
   "recoveryDeleteCiphersTitle": {
     "message": "Delete unrecoverable vault items"

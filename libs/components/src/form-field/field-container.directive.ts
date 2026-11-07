@@ -21,7 +21,7 @@ export class BitFieldContainerDirective {
       "tw-flex",
       "tw-w-full",
       "tw-border",
-      "tw-rounded-xl",
+      "tw-rounded-control",
       "tw-border-solid",
       "tw-border-border-strong",
       "tw-bg-bg-secondary",
@@ -47,7 +47,9 @@ export class BitFieldContainerDirective {
       "has-[select]:after:tw-border-r-[2px]",
       "has-[select]:after:tw-border-b-[2px]",
       "has-[select]:after:tw-rounded-[2px]",
-      ...(size === "large" ? ["tw-text-base/6", "tw-min-h-12"] : ["tw-text-sm/5", "tw-min-h-10"]),
+      ...(size === "large"
+        ? ["tw-text-base/6", "tw-min-h-control-lg"]
+        : ["tw-text-sm/5", "tw-min-h-control"]),
       ...(hasError
         ? [
             "!tw-ring-border-danger",

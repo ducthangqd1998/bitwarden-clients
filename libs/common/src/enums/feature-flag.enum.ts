@@ -114,6 +114,7 @@ export type AllowedFeatureFlagTypes = boolean | number | string;
 
 // Helper to ensure the value is treated as a boolean.
 const FALSE = false as boolean;
+const TRUE = true as boolean;
 
 /**
  * Default value for feature flags.
@@ -218,7 +219,9 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.PamAccessConnector]: FALSE,
 
   /* VFO */
-  [FeatureFlag.VFO1Foundation]: FALSE,
+  // Fork: on by default. A Vaultwarden server cannot turn this flag on (it only accepts a fixed list
+  // of client flags), so without this default the new vault never shows.
+  [FeatureFlag.VFO1Foundation]: TRUE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;

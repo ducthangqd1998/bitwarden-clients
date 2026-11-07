@@ -139,13 +139,13 @@ export class BitIconButtonComponent implements ButtonLikeAbstraction, FocusableE
 const getIconButtonSizeStyles = (size: IconButtonSize): string[] => {
   const iconButtonSizes: Record<IconButtonSize, string[]> = {
     xsmall: ["tw-text-xl", "tw-size-6"],
-    small: ["tw-text-xl", "tw-size-8"],
-    default: ["tw-text-2xl", "tw-size-10"],
+    small: ["tw-text-xl", "tw-size-control-sm"],
+    default: ["tw-text-icon-control", "tw-size-control"],
     large: ["tw-text-[2rem]", "tw-size-11"],
   };
   return iconButtonSizes[size] || iconButtonSizes.default;
 };
 
 const getRadiusStyle = (size: IconButtonSize): string => {
-  return size === "xsmall" ? "tw-rounded" : "tw-rounded-xl";
+  return size === "xsmall" ? "tw-rounded" : "tw-rounded-control";
 };

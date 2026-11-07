@@ -297,6 +297,7 @@
         "axe-playwright",
         "@compodoc/compodoc",
         "@ng-select/ng-select",
+        "@spartan-ng/brain",
         "@storybook/addon-a11y",
         "@storybook/addon-designs",
         "@storybook/addon-docs",

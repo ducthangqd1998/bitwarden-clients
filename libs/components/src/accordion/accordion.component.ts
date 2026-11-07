@@ -78,7 +78,7 @@ export class AccordionComponent {
       "tw-border",
       "tw-border-solid",
       "tw-border-border-base",
-      "tw-rounded-xl",
+      "tw-rounded-card",
       ...(this.group
         ? [
             // Collapse inner radii and borders when stacked inside a group
@@ -97,8 +97,10 @@ export class AccordionComponent {
   protected readonly triggerClassList = computed(() =>
     [
       "tw-flex",
+      "tw-flex-wrap",
       "tw-items-center",
-      "tw-gap-3",
+      "tw-gap-x-3",
+      "tw-gap-y-2",
       "tw-w-full",
       "tw-border-0",
       "tw-text-start",

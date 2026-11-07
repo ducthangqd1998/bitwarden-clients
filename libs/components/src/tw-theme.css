@@ -16,6 +16,45 @@
 
 :root {
   /* ========================================
+   * SHAPE
+   * Corner radius by role. Defaults are the shapes the components had before these tokens
+   * existed, so adding them changes nothing. A scope (see `.vfo1` below) remaps them.
+   * ======================================== */
+
+  --radius-control: 0.75rem; /* buttons, fields, nav items, toggles */
+  --radius-tag: 9999px; /* badges */
+  --radius-card: 0.75rem; /* cards, callouts, accordions, drop zones */
+  --radius-panel: 0.75rem; /* menus, popovers, dialogs, tables, bars */
+
+  /* Tailwind's `shadow-lg`, so the menus and dialogs that used it look the same. */
+  --shadow-overlay: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Control heights. `--pad-control-*` is the vertical padding of a button of that size; it already
+     takes the 1px border off, so border plus padding plus line height gives the height. */
+  --size-control-sm: 2rem; /* small icon button */
+  --size-control: 2.5rem; /* icon button, field */
+  --size-control-lg: 3rem; /* large field */
+  --pad-control-sm: calc(0.5rem - 1px);
+  --pad-control: calc(0.625rem - 1px);
+  --pad-control-lg: calc(0.75rem - 1px);
+  --text-icon-control: 1.5rem; /* glyph in a default icon button */
+  --pad-select-value: 7px; /* above and below the value in a single select (ng-select) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-3xl: 1.875rem;
+
+  /* Unitless pixels: the vault table virtualizes, so it needs a number, not a length. */
+  --row-height-px: 56;
+
+  /* Data and tab surfaces. Defaults are the colors these had before they were tokens. */
+  --color-bg-row-hover: var(--color-bg-brand-softer);
+  --color-fg-table-header: var(--color-fg-body);
+  --color-fg-tab-active: var(--color-fg-brand);
+  --color-tab-indicator: var(--color-bg-brand);
+  --color-bg-toggle-active: var(--color-bg-brand-stronger);
+  --color-fg-toggle-active: var(--color-fg-contrast);
+
+  /* ========================================
    * LEGACY COLORS (RGB format)
    * These are the original colors used throughout the app.
    * Use these for existing components until migration is complete.
@@ -812,6 +851,226 @@
   --color-nav-bg-brand: var(--color-nav-bg-primary);
   --color-nav-bg-brand-soft: var(--color-nav-bg-primary-strong);
   --color-nav-bg-brand-hover: var(--color-nav-bg-primary-hover);
+}
+
+/**========================================
+ * VFO1 FLAT STYLE
+ * ========================================
+ * The new vault's look: flat and light, with smaller corners and no coloured side nav. The web
+ * client puts `vfo1` on <html>, beside the theme class, so this reaches overlays (menus, dialogs)
+ * as well as the page. Desktop marks `app-root` instead, so these rules do not apply there.
+ * Radius tokens are defined in :root; only the values differ here. */
+html.vfo1 {
+  /* Neutral grays in place of the blue-tinted slate scale, and no brand blue: the flat style is
+   * black, white and gray. Status colors (success, warning, danger) keep their hues. */
+  --color-gray-050: #fafafa;
+  --color-gray-100: #ebebeb;
+  --color-gray-200: #e0e0e0;
+  --color-gray-300: #c6c6c6;
+  --color-gray-400: #9a9a9a;
+  --color-gray-400-rgb: 154, 154, 154;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #3b3b3b;
+  --color-gray-700-rgb: 59, 59, 59;
+  --color-gray-800: #262626;
+  --color-gray-800-rgb: 38, 38, 38;
+  --color-gray-900: #171717;
+  --color-gray-950: #0a0a0a;
+  --color-gray-950-rgb: 10, 10, 10;
+
+  /* Brand palette steps map onto the same grays, for the components that read the palette
+   * directly (icon tiles, avatars) rather than the semantic tokens below. */
+  --color-brand-050: var(--color-gray-050);
+  --color-brand-100: var(--color-gray-100);
+  --color-brand-200: var(--color-gray-200);
+  --color-brand-300: var(--color-gray-300);
+  --color-brand-400: var(--color-gray-400);
+  --color-brand-500: var(--color-gray-500);
+  --color-brand-600: var(--color-gray-600);
+  --color-brand-700: var(--color-gray-700);
+  --color-brand-800: var(--color-gray-800);
+  --color-brand-900: var(--color-gray-900);
+  --color-brand-950: var(--color-gray-950);
+  --color-brand-700-rgb: 59, 59, 59;
+  --color-brand-800-rgb: 38, 38, 38;
+  --color-brand-950-rgb: 10, 10, 10;
+  --color-bw-blue: 23 23 23;
+  --color-hover-default: rgb(0 0 0 / 0.05);
+
+  /* The decorative accent families fold into gray too. */
+  --color-purple-050: var(--color-gray-050);
+  --color-purple-100: var(--color-gray-100);
+  --color-purple-200: var(--color-gray-200);
+  --color-purple-300: var(--color-gray-300);
+  --color-purple-400: var(--color-gray-400);
+  --color-purple-500: var(--color-gray-500);
+  --color-purple-600: var(--color-gray-600);
+  --color-purple-700: var(--color-gray-700);
+  --color-purple-800: var(--color-gray-800);
+  --color-purple-900: var(--color-gray-900);
+  --color-purple-950: var(--color-gray-950);
+  --color-teal-050: var(--color-gray-050);
+  --color-teal-100: var(--color-gray-100);
+  --color-teal-200: var(--color-gray-200);
+  --color-teal-300: var(--color-gray-300);
+  --color-teal-400: var(--color-gray-400);
+  --color-teal-500: var(--color-gray-500);
+  --color-teal-600: var(--color-gray-600);
+  --color-teal-700: var(--color-gray-700);
+  --color-teal-800: var(--color-gray-800);
+  --color-teal-900: var(--color-gray-900);
+  --color-teal-950: var(--color-gray-950);
+  --color-coral-050: var(--color-gray-050);
+  --color-coral-100: var(--color-gray-100);
+  --color-coral-200: var(--color-gray-200);
+  --color-coral-300: var(--color-gray-300);
+  --color-coral-400: var(--color-gray-400);
+  --color-coral-500: var(--color-gray-500);
+  --color-coral-600: var(--color-gray-600);
+  --color-coral-700: var(--color-gray-700);
+  --color-coral-800: var(--color-gray-800);
+  --color-coral-900: var(--color-gray-900);
+  --color-coral-950: var(--color-gray-950);
+
+  --color-shadow: 160 160 160;
+  --color-background-alt: 245 245 245;
+  --color-background-alt2: 23 23 23;
+  --color-background-alt3: 10 10 10;
+  --color-background-alt4: 10 10 10;
+
+  --radius-control: 0.375rem;
+  --radius-tag: 0.375rem;
+  --radius-card: 0.5rem;
+  --radius-panel: 0.75rem;
+
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.08);
+
+  --size-control-sm: 1.75rem;
+  --size-control: 2rem;
+  --size-control-lg: 2.5rem;
+  --pad-control-sm: calc(0.375rem - 1px);
+  --pad-control: calc(0.375rem - 1px);
+  --pad-control-lg: calc(0.5rem - 1px);
+  --text-icon-control: 1.25rem;
+  --pad-select-value: 5px;
+
+  /* The type scale lives in rem, so shrinking the root shrinks type, spacing and icons together.
+   * xs and sm are lifted so the smallest text stays above 11px. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9286rem;
+  --text-3xl: 1.7143rem; /* page titles: 24px at the compact root */
+
+  --row-height-px: 44;
+}
+
+/* Compact type for pointer devices: 14px base instead of 16px, a percentage so the user's own
+ * browser font size still counts. Touch keeps 16px, which input text needs to stop iOS zooming. */
+@media (pointer: fine) {
+  html.vfo1 {
+    font-size: 87.5%;
+  }
+}
+
+/* A light side nav. Dark theme keeps its own dark nav tokens, and the `default` nav remaps these
+ * tokens back to the original palette (above), so only the vfo1 nav changes. */
+html.vfo1.theme_light {
+  --color-nav-border: var(--color-gray-100);
+  --color-nav-fg-body: var(--color-gray-700);
+  --color-nav-fg-heading: var(--color-gray-500);
+  --color-nav-border-focus: var(--color-black);
+
+  --color-nav-bg-brand-soft: var(--color-gray-100);
+  --color-nav-bg-brand: var(--color-gray-050);
+  --color-nav-bg-brand-hover: var(--color-bg-hover);
+
+  /* Hairline borders on cards, items and table rows. Light theme only: gray-100 is a light color. */
+  --color-border-base: var(--color-gray-100);
+
+  /* Neutral hover instead of a blue tint, quiet table headers, and dark tabs. */
+  --color-bg-row-hover: var(--color-bg-hover);
+  --color-fg-table-header: var(--color-fg-body-subtle);
+  --color-fg-tab-active: var(--color-fg-heading);
+  --color-tab-indicator: var(--color-fg-heading);
+
+  /* The selected toggle is a soft gray instead of a solid pill. */
+  --color-bg-toggle-active: var(--color-gray-100);
+  --color-fg-toggle-active: var(--color-gray-950);
+
+  /* Accent: near-black where the brand blue was. */
+  --color-primary-100: 235 235 235;
+  --color-primary-300: 154 154 154;
+  --color-primary-600: 23 23 23;
+  --color-primary-700: 10 10 10;
+  --color-secondary-100: 240 240 240;
+  --color-secondary-300: 198 198 198;
+  --color-secondary-500: 115 115 115;
+  --color-secondary-600: 82 82 82;
+  --color-secondary-700: 59 59 59;
+
+  --color-bg-brand-softer: var(--color-gray-100);
+  --color-bg-brand-soft: var(--color-gray-200);
+  --color-bg-brand-medium: var(--color-gray-300);
+  --color-bg-brand: var(--color-gray-800);
+  --color-bg-brand-strong: var(--color-gray-900);
+  --color-bg-brand-stronger: var(--color-gray-950);
+  --color-fg-brand-soft: var(--color-gray-300);
+  --color-fg-brand: var(--color-gray-900);
+  --color-fg-brand-strong: var(--color-gray-950);
+  --color-border-brand-soft: var(--color-gray-300);
+  --color-border-brand: var(--color-gray-800);
+  --color-border-brand-strong: var(--color-gray-950);
+  --color-bg-avatar-brand: var(--color-gray-800);
+  --color-bg-avatar-brand-hover: var(--color-gray-900);
+  --color-bg-row-hover: var(--color-gray-050);
+  --color-text-main: 23 23 23;
+  --color-text-muted: 115 115 115;
+  --color-text-contrast: 255 255 255;
+  --color-text-code: 82 82 82;
+}
+
+/* Dark: neutral surfaces, the shell darker than the panel, and a near-white accent. */
+html.vfo1.theme_dark {
+  --color-background: 23 23 23;
+  --color-background-alt: 10 10 10;
+  --color-background-alt2: 38 38 38;
+  --color-background-alt3: 38 38 38;
+  --color-primary-100: 38 38 38;
+  --color-primary-300: 82 82 82;
+  --color-primary-600: 226 226 226;
+  --color-primary-700: 240 240 240;
+  --color-secondary-100: 38 38 38;
+  --color-secondary-300: 82 82 82;
+  --color-secondary-500: 120 120 120;
+  --color-secondary-600: 150 150 150;
+  --color-secondary-700: 170 170 170;
+
+  --color-nav-bg-brand: var(--color-gray-950);
+  --color-nav-bg-brand-soft: var(--color-gray-800);
+  --color-nav-bg-brand-hover: rgba(var(--color-white-rgb), 0.06);
+  --color-nav-border: var(--color-gray-800);
+
+  --color-bg-brand-softer: var(--color-gray-800);
+  --color-bg-brand-soft: var(--color-gray-700);
+  --color-bg-brand-medium: var(--color-gray-600);
+  --color-bg-brand: var(--color-gray-200);
+  --color-bg-brand-strong: var(--color-gray-100);
+  --color-bg-brand-stronger: var(--color-white);
+  --color-fg-brand-soft: var(--color-gray-400);
+  --color-fg-brand: var(--color-gray-100);
+  --color-fg-brand-strong: var(--color-white);
+  --color-border-brand-soft: var(--color-gray-600);
+  --color-border-brand: var(--color-gray-200);
+  --color-border-brand-strong: var(--color-white);
+  --color-bg-avatar-brand: var(--color-gray-600);
+  --color-bg-avatar-brand-hover: var(--color-gray-500);
+  --color-bg-row-hover: var(--color-bg-hover);
+  --color-bw-blue: 240 240 240;
+  --color-hover-default: rgb(255 255 255 / 0.08);
+  --color-text-main: 245 245 245;
+  --color-text-muted: 154 154 154;
+  --color-text-contrast: 23 23 23;
+  --color-text-code: 200 200 200;
 }
 
 /* Render browser-drawn form control UI (date picker, spin buttons, select dropdowns) dark so it
